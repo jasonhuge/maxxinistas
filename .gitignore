@@ -1,0 +1,9 @@
+# Sensitive config files
+mail-config.php
+
+# OS files
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
