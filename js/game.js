@@ -1,0 +1,519 @@
+// DOM Elements
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const startScreen = document.getElementById('startScreen');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const scoreDisplay = document.getElementById('score');
+const livesDisplay = document.getElementById('lives');
+const finalScoreDisplay = document.getElementById('finalScore');
+const suggestionsCollected = document.getElementById('suggestionsCollected');
+const bookBtn = document.getElementById('bookBtn');
+const gameArea = document.getElementById('gameArea');
+const instructionsScreen = document.getElementById('instructionsScreen');
+const gameContainer = document.getElementById('gameContainer');
+
+// Game state
+let gameRunning = false;
+let score = 0;
+let lives = 3;
+let items = [];
+let collectedSuggestions = [];
+let poofs = [];
+let lastSpawn = 0;
+let spawnRate = 1800;
+let difficulty = 1;
+let cartShake = 0;
+
+// Parallax clouds - larger 8-bit style
+const clouds = [
+    { x: 50, y: 50, size: 2.5, speed: 0.2 },
+    { x: 250, y: 30, size: 3.0, speed: 0.15 },
+    { x: 450, y: 70, size: 2.0, speed: 0.25 },
+    { x: 150, y: 100, size: 1.8, speed: 0.1 },
+    { x: 380, y: 45, size: 2.2, speed: 0.18 },
+];
+
+// Player (shopping cart)
+const player = {
+    x: 250,
+    y: 310,
+    width: 70,
+    height: 55,
+    speed: 8
+};
+
+// Audience suggestions with emoji icons
+const goodSuggestions = [
+    // Occupations
+    { text: "Dentist", emoji: "🦷", points: 10 },
+    { text: "Doctor", emoji: "👨‍⚕️", points: 10 },
+    { text: "Chef", emoji: "👨‍🍳", points: 10 },
+    { text: "Pilot", emoji: "✈️", points: 15 },
+    { text: "Farmer", emoji: "🧑‍🌾", points: 10 },
+    { text: "Teacher", emoji: "📚", points: 10 },
+    { text: "Plumber", emoji: "🔧", points: 10 },
+    { text: "Firefighter", emoji: "🚒", points: 15 },
+    { text: "Detective", emoji: "🔍", points: 15 },
+    { text: "Astronaut", emoji: "👨‍🚀", points: 20 },
+    // Emotions
+    { text: "Jealousy", emoji: "💚", points: 10 },
+    { text: "Awkward", emoji: "😬", points: 10 },
+    { text: "Confused", emoji: "😕", points: 10 },
+    { text: "Hangry", emoji: "😤", points: 10 },
+    { text: "Excited", emoji: "🤩", points: 10 },
+    { text: "Nervous", emoji: "😰", points: 10 },
+    { text: "Proud", emoji: "🦚", points: 15 },
+    { text: "Guilty", emoji: "😳", points: 15 },
+    { text: "Lovesick", emoji: "😍", points: 10 },
+    { text: "Grumpy", emoji: "😠", points: 10 },
+    // Locations
+    { text: "Moon", emoji: "🌙", points: 15 },
+    { text: "Ocean", emoji: "🌊", points: 10 },
+    { text: "Space", emoji: "🚀", points: 15 },
+    { text: "DMV", emoji: "🚗", points: 15 },
+    { text: "Hospital", emoji: "🏥", points: 10 },
+    { text: "Beach", emoji: "🏖️", points: 10 },
+    { text: "Castle", emoji: "🏰", points: 15 },
+    { text: "Jungle", emoji: "🌴", points: 15 },
+    { text: "Prison", emoji: "🔒", points: 15 },
+    { text: "Circus", emoji: "🎪", points: 15 },
+    { text: "Library", emoji: "📖", points: 10 },
+    { text: "Gym", emoji: "💪", points: 10 },
+    // Events
+    { text: "Wedding", emoji: "💍", points: 15 },
+    { text: "Funeral", emoji: "⚰️", points: 20 },
+    { text: "Birthday", emoji: "🎂", points: 10 },
+    { text: "Breakup", emoji: "💔", points: 10 },
+    { text: "Prom", emoji: "💃", points: 15 },
+    { text: "Interview", emoji: "💼", points: 15 },
+    { text: "First Date", emoji: "🌹", points: 15 },
+    { text: "Reunion", emoji: "🤗", points: 10 },
+    // Characters
+    { text: "Grandma", emoji: "👵", points: 10 },
+    { text: "Pirate", emoji: "🏴‍☠️", points: 15 },
+    { text: "Robot", emoji: "🤖", points: 15 },
+    { text: "Wizard", emoji: "🧙", points: 20 },
+    { text: "Cowboy", emoji: "🤠", points: 15 },
+    { text: "Ghost", emoji: "👻", points: 15 },
+    { text: "Ninja", emoji: "🥷", points: 20 },
+    { text: "Vampire", emoji: "🧛", points: 20 },
+    { text: "Alien", emoji: "👽", points: 20 },
+    { text: "Mermaid", emoji: "🧜‍♀️", points: 20 },
+    { text: "Clown", emoji: "🤡", points: 15 },
+    { text: "Princess", emoji: "👸", points: 15 },
+    { text: "Superhero", emoji: "🦸", points: 20 },
+    { text: "Baby", emoji: "👶", points: 10 },
+    { text: "Caveman", emoji: "🦴", points: 15 },
+    // Time periods
+    { text: "80s", emoji: "📼", points: 15 },
+    { text: "Future", emoji: "🔮", points: 15 },
+    { text: "Medieval", emoji: "⚔️", points: 15 },
+    { text: "Prehistoric", emoji: "🦕", points: 20 },
+    { text: "Wild West", emoji: "🌵", points: 15 },
+    // Actions/Themes
+    { text: "Betrayal", emoji: "🗡️", points: 20 },
+    { text: "Revenge", emoji: "😈", points: 20 },
+    { text: "Secret", emoji: "🤫", points: 15 },
+    { text: "Disco", emoji: "🕺", points: 15 },
+    { text: "Laundry", emoji: "🧺", points: 10 },
+    { text: "Sleepy", emoji: "😴", points: 10 },
+    // Objects/Random
+    { text: "Pizza", emoji: "🍕", points: 10 },
+    { text: "Banana", emoji: "🍌", points: 10 },
+    { text: "Taco", emoji: "🌮", points: 10 },
+    { text: "Toilet", emoji: "🚽", points: 10 },
+    { text: "Unicorn", emoji: "🦄", points: 20 },
+    { text: "Diamond", emoji: "💎", points: 20 },
+    { text: "Cactus", emoji: "🌵", points: 10 },
+    { text: "Pickle", emoji: "🥒", points: 10 },
+    { text: "Monkey", emoji: "🐒", points: 15 },
+    { text: "Shark", emoji: "🦈", points: 15 },
+    { text: "Dragon", emoji: "🐉", points: 20 },
+    { text: "Octopus", emoji: "🐙", points: 15 },
+    { text: "Penguin", emoji: "🐧", points: 10 },
+    { text: "Sloth", emoji: "🦥", points: 15 },
+    { text: "Llama", emoji: "🦙", points: 15 },
+    { text: "Donut", emoji: "🍩", points: 10 },
+    { text: "Tractor", emoji: "🚜", points: 10 },
+    { text: "Volcano", emoji: "🌋", points: 20 },
+    { text: "Rainbow", emoji: "🌈", points: 15 },
+    { text: "Thunder", emoji: "⛈️", points: 15 },
+];
+
+const badSuggestions = [
+    // Inappropriate suggestions audiences yell
+    { text: "Poop", emoji: "💩", points: -1 },
+    { text: "Eggplant", emoji: "🍆", points: -1 },
+    { text: "Peach", emoji: "🍑", points: -1 },
+    { text: "Dildo", emoji: "🌭", points: -1 },
+    { text: "Balls", emoji: "🎾", points: -1 },
+    { text: "Proctologist", emoji: "🩺", points: -1 },
+    { text: "Gynecologist", emoji: "👩‍⚕️", points: -1 },
+    { text: "Your Mom", emoji: "🤰", points: -1 },
+    { text: "Orgy", emoji: "🛏️", points: -1 },
+    { text: "Fart", emoji: "💨", points: -1 },
+];
+
+// Input handling
+let keys = { left: false, right: false };
+let mouseX = null;
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') keys.left = true;
+    if (e.key === 'ArrowRight') keys.right = true;
+    if (e.key === ' ' && !gameRunning && !startScreen.classList.contains('hidden')) startGame();
+});
+
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft') keys.left = false;
+    if (e.key === 'ArrowRight') keys.right = false;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    mouseX = (e.clientX - rect.left) * scaleX;
+});
+
+canvas.addEventListener('mouseleave', () => {
+    mouseX = null;
+});
+
+// Mobile controls
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+
+leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); keys.left = true; });
+leftBtn.addEventListener('touchend', (e) => { e.preventDefault(); keys.left = false; });
+rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); keys.right = true; });
+rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); keys.right = false; });
+
+// Game functions
+function startGame() {
+    // Remove splash mode for normal layout
+    gameContainer.classList.remove('splash-mode');
+
+    // Show instructions screen
+    startScreen.classList.add('fade-out');
+
+    setTimeout(() => {
+        startScreen.classList.add('hidden');
+        startScreen.classList.remove('fade-out');
+        instructionsScreen.classList.remove('hidden');
+    }, 500);
+}
+
+function beginGame() {
+    score = 0;
+    lives = 3;
+    items = [];
+    poofs = [];
+    collectedSuggestions = [];
+    difficulty = 1;
+    spawnRate = 1800;
+    player.x = 250;
+
+    // Hide instructions, show game
+    instructionsScreen.classList.add('hidden');
+    gameOverScreen.classList.add('hidden');
+    gameArea.classList.remove('hidden');
+    gameRunning = true;
+    updateUI();
+    requestAnimationFrame(gameLoop);
+}
+
+function restartGame() {
+    score = 0;
+    lives = 3;
+    items = [];
+    poofs = [];
+    collectedSuggestions = [];
+    difficulty = 1;
+    spawnRate = 1800;
+    player.x = 250;
+
+    gameOverScreen.classList.add('hidden');
+    gameRunning = true;
+    updateUI();
+    requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+    gameRunning = false;
+    finalScoreDisplay.textContent = score;
+
+    // Show collected suggestions
+    let html = '<p style="margin-bottom: 8px;">You collected:</p>';
+    const toShow = collectedSuggestions.slice(-8);
+    toShow.forEach(s => {
+        html += `<span>${s}</span>`;
+    });
+    if (collectedSuggestions.length === 0) {
+        html += '<span>Nothing!</span>';
+    }
+    suggestionsCollected.innerHTML = html;
+
+    gameOverScreen.classList.remove('hidden');
+}
+
+function updateUI() {
+    scoreDisplay.textContent = score;
+    livesDisplay.textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+}
+
+function spawnItem() {
+    let suggestion;
+    // Bad suggestion chance increases with difficulty (starts 15%, maxes at 40%)
+    const badChance = Math.min(0.15 + (difficulty - 1) * 0.05, 0.40);
+
+    if (Math.random() < badChance) {
+        suggestion = badSuggestions[Math.floor(Math.random() * badSuggestions.length)];
+    } else {
+        suggestion = goodSuggestions[Math.floor(Math.random() * goodSuggestions.length)];
+    }
+
+    items.push({
+        x: Math.random() * (canvas.width - 120) + 60,
+        y: -40,
+        suggestion: suggestion,
+        speed: 2 + difficulty * 0.6,
+        width: 0
+    });
+}
+
+function drawCart(x, y) {
+    let shakeX = 0;
+    let shakeY = 0;
+    if (cartShake > 0) {
+        shakeX = (Math.random() - 0.5) * cartShake;
+        shakeY = (Math.random() - 0.5) * cartShake * 0.5;
+        cartShake -= 1;
+    }
+
+    ctx.font = '55px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🛒', x + 35 + shakeX, y + 30 + shakeY);
+}
+
+function createPoof(x, y, text, isBad) {
+    poofs.push({
+        x: x,
+        y: y,
+        text: text,
+        isBad: isBad,
+        opacity: 1,
+        life: 1.0
+    });
+
+    if (isBad) {
+        cartShake = 15;
+    }
+}
+
+function updateAndDrawPoofs() {
+    for (let i = poofs.length - 1; i >= 0; i--) {
+        const poof = poofs[i];
+
+        poof.life -= 0.02;
+        poof.y -= 1.5;
+        poof.opacity = poof.life;
+
+        if (poof.life <= 0) {
+            poofs.splice(i, 1);
+            continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = poof.opacity;
+
+        const particleCount = 8;
+        const burstRadius = (1 - poof.life) * 30;
+        ctx.fillStyle = poof.isBad ? '#FF4444' : '#FFD700';
+        for (let j = 0; j < particleCount; j++) {
+            const angle = (j / particleCount) * Math.PI * 2;
+            const px = poof.x + Math.cos(angle) * burstRadius;
+            const py = poof.y + Math.sin(angle) * burstRadius;
+            ctx.fillRect(px - 3, py - 3, 6, 6);
+        }
+
+        ctx.font = 'bold 18px Courier New';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 4;
+        ctx.strokeText(poof.text, poof.x, poof.y);
+
+        ctx.fillStyle = poof.isBad ? '#FF4444' : '#FFFFFF';
+        ctx.fillText(poof.text, poof.x, poof.y);
+
+        ctx.restore();
+    }
+}
+
+function drawItem(item) {
+    const isBad = item.suggestion.points === -1;
+    const size = 50;
+    item.width = size;
+
+    ctx.fillStyle = isBad ? '#FF4444' : '#FFFFFF';
+    ctx.fillRect(item.x - size/2, item.y - size/2, size, size);
+
+    ctx.strokeStyle = isBad ? '#CC0000' : '#FFD700';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(item.x - size/2, item.y - size/2, size, size);
+
+    ctx.font = '32px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(item.suggestion.emoji, item.x, item.y);
+}
+
+function drawCloud(x, y, size) {
+    ctx.fillStyle = '#FFFFFF';
+    const blockSize = 8 * size;
+    ctx.fillRect(x + blockSize, y - blockSize, blockSize * 3, blockSize);
+    ctx.fillRect(x, y, blockSize * 5, blockSize);
+    ctx.fillRect(x + blockSize, y + blockSize, blockSize * 3, blockSize);
+}
+
+function updateClouds() {
+    for (const cloud of clouds) {
+        cloud.x += cloud.speed;
+        if (cloud.x > canvas.width + 80) {
+            cloud.x = -80;
+            cloud.y = 30 + Math.random() * 60;
+        }
+    }
+}
+
+function drawClouds() {
+    for (const cloud of clouds) {
+        drawCloud(cloud.x, cloud.y, cloud.size);
+    }
+}
+
+function drawStage() {
+    ctx.fillStyle = '#555555';
+    ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
+
+    ctx.fillStyle = '#444444';
+    for (let x = 0; x < canvas.width; x += 16) {
+        for (let y = canvas.height - 60; y < canvas.height; y += 16) {
+            if ((x + y) % 32 === 0) {
+                ctx.fillRect(x, y, 8, 8);
+            }
+        }
+    }
+
+    ctx.fillStyle = '#FFD700';
+    for (let i = 0; i < canvas.width; i += 80) {
+        ctx.fillRect(i + 20, canvas.height - 55, 6, 50);
+    }
+}
+
+function animateBackground() {
+    if (!gameRunning) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#87CEEB');
+        gradient.addColorStop(1, '#E0F4FF');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        updateClouds();
+        drawClouds();
+        drawStage();
+        requestAnimationFrame(animateBackground);
+    }
+}
+
+// Polyfill for roundRect
+if (!ctx.roundRect) {
+    ctx.roundRect = function(x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.beginPath();
+        this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r);
+        this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r);
+        this.arcTo(x, y, x + w, y, r);
+        this.closePath();
+        return this;
+    };
+}
+
+let lastTime = 0;
+function gameLoop(timestamp) {
+    if (!gameRunning) return;
+
+    const deltaTime = timestamp - lastTime;
+    lastTime = timestamp;
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#87CEEB');
+    gradient.addColorStop(1, '#E0F4FF');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    updateClouds();
+    drawClouds();
+    drawStage();
+
+    if (timestamp - lastSpawn > spawnRate) {
+        spawnItem();
+        lastSpawn = timestamp;
+        if (spawnRate > 500) spawnRate -= 25;
+        difficulty += 0.05;
+    }
+
+    if (mouseX !== null) {
+        player.x += (mouseX - player.x - player.width/2) * 0.15;
+    } else {
+        if (keys.left) player.x -= player.speed;
+        if (keys.right) player.x += player.speed;
+    }
+
+    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+
+    for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
+        item.y += item.speed;
+
+        if (item.y + 15 > player.y &&
+            item.y - 15 < player.y + player.height &&
+            item.x > player.x &&
+            item.x < player.x + player.width) {
+
+            createPoof(item.x, item.y, item.suggestion.text, item.suggestion.points === -1);
+
+            if (item.suggestion.points === -1) {
+                lives--;
+                ctx.fillStyle = 'rgba(255,0,0,0.4)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                score += item.suggestion.points;
+                collectedSuggestions.push(item.suggestion.emoji);
+            }
+            items.splice(i, 1);
+            updateUI();
+
+            if (lives <= 0) {
+                endGame();
+                return;
+            }
+            continue;
+        }
+
+        if (item.y > canvas.height) {
+            items.splice(i, 1);
+            continue;
+        }
+
+        drawItem(item);
+    }
+
+    drawCart(player.x, player.y);
+    updateAndDrawPoofs();
+    requestAnimationFrame(gameLoop);
+}
