@@ -48,11 +48,19 @@ body {
     color: white;
     border: 3px solid #FFD700;
     cursor: pointer;
-    transition: background 0.2s;
+    box-shadow: 3px 3px 0 #990000;
+    transition: all 0.1s;
 }
 
 .social-btn:hover {
     background: #FF0000;
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 #990000;
+}
+
+.social-btn:active {
+    transform: translate(3px, 3px);
+    box-shadow: none;
 }
 
 .contact-btn {
