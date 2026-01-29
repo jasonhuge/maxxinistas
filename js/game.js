@@ -138,20 +138,26 @@ const goodSuggestions = [
     { text: "Volcano", emoji: "🌋", points: 20 },
     { text: "Rainbow", emoji: "🌈", points: 15 },
     { text: "Thunder", emoji: "⛈️", points: 15 },
+    { text: "Hot Dog", emoji: "🌭", points: 10 },
+    { text: "Pregnant", emoji: "🤰", points: 15 },
+    { text: "Poop", emoji: "💩", points: 10 },
 ];
 
 const badSuggestions = [
     // Inappropriate suggestions audiences yell
-    { text: "Poop", emoji: "💩", points: -1 },
     { text: "Eggplant", emoji: "🍆", points: -1 },
     { text: "Peach", emoji: "🍑", points: -1 },
-    { text: "Dildo", emoji: "🌭", points: -1 },
+    { text: "Dildo", emoji: "🔧", points: -1 },
     { text: "Balls", emoji: "🎾", points: -1 },
     { text: "Proctologist", emoji: "🩺", points: -1 },
     { text: "Gynecologist", emoji: "👩‍⚕️", points: -1 },
-    { text: "Your Mom", emoji: "🤰", points: -1 },
     { text: "Orgy", emoji: "🛏️", points: -1 },
     { text: "Fart", emoji: "💨", points: -1 },
+    // Weapons
+    { text: "Gun", emoji: "🔫", points: -1 },
+    { text: "Knife", emoji: "🔪", points: -1 },
+    { text: "Bomb", emoji: "💣", points: -1 },
+    { text: "Axe", emoji: "🪓", points: -1 },
 ];
 
 // Input handling
