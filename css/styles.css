@@ -503,6 +503,125 @@ body {
     color: #FF6B6B;
 }
 
+/* Leaderboard */
+.final-score-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    color: #FFD700;
+}
+
+.leaderboard-container {
+    margin: 15px 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.leaderboard-list {
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid #FFD700;
+    padding: 10px;
+}
+
+.leaderboard-entry {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.leaderboard-entry:last-child {
+    border-bottom: none;
+}
+
+.leaderboard-entry.highlight {
+    background: rgba(255, 215, 0, 0.3);
+    color: #FFD700;
+}
+
+.leaderboard-entry .rank {
+    width: 25px;
+    text-align: left;
+}
+
+.leaderboard-entry .name {
+    width: 50px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.leaderboard-entry .score {
+    flex: 1;
+    text-align: right;
+}
+
+.leaderboard-entry .level {
+    width: 30px;
+    text-align: right;
+    opacity: 0.7;
+}
+
+/* Name Entry */
+.name-entry {
+    margin: 15px 0;
+    text-align: center;
+}
+
+.name-entry p {
+    margin-bottom: 10px;
+}
+
+.name-input {
+    font-size: 2rem;
+    font-weight: bold;
+    width: 120px;
+    padding: 10px;
+    text-align: center;
+    background: #2a2a3e;
+    border: 4px solid #FFD700;
+    color: white;
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 8px;
+}
+
+.name-input:focus {
+    outline: none;
+    background: #3a3a4e;
+}
+
+.name-input::placeholder {
+    color: #666;
+    letter-spacing: 8px;
+}
+
+.submit-name-btn {
+    margin-top: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.game-over-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.game-over-buttons .pixel-btn {
+    margin: 5px;
+}
+
+.book-btn {
+    background: #FFD700 !important;
+    color: #000 !important;
+}
+
 /* Mobile Controls */
 .mobile-controls {
     display: none;

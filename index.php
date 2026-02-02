@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Maxxinistas | Improv Comedy</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=2">
 </head>
 <body>
     <div class="persistent-contact">
@@ -90,16 +90,16 @@
 
                 <div class="game-over-screen hidden" id="gameOverScreen">
                     <h2>SCENE!</h2>
-                    <p>Final Score:</p>
-                    <div class="final-score" id="finalScore">0</div>
-                    <div class="suggestions-collected" id="suggestionsCollected">
-                        <p style="margin-bottom: 8px;">You collected:</p>
+                    <div class="final-score-row">
+                        <span>Score: <span id="finalScore">0</span></span>
+                        <span>Level: <span id="finalLevel">1</span></span>
                     </div>
-                    <button class="pixel-btn" onclick="restartGame()">PLAY AGAIN</button>
-                    <p style="margin-top: 20px;">Want the real thing?</p>
-                    <button class="pixel-btn" id="bookBtn" style="background: #FFD700; color: #000;" onclick="openBookingWithScore()">
-                        BOOK US!
-                    </button>
+                    <div id="nameEntrySection"></div>
+                    <div id="leaderboardSection" class="leaderboard-container"></div>
+                    <div class="game-over-buttons">
+                        <button class="pixel-btn" onclick="restartGame()">PLAY AGAIN</button>
+                        <button class="pixel-btn book-btn" onclick="openBookingWithScore()">BOOK US!</button>
+                    </div>
                 </div>
             </div>
 
@@ -114,7 +114,8 @@
         </div>
     </div>
 
-    <script src="js/game.js"></script>
-    <script src="js/booking.js"></script>
+    <script src="js/leaderboard.js?v=2"></script>
+    <script src="js/game.js?v=2"></script>
+    <script src="js/booking.js?v=2"></script>
 </body>
 </html>

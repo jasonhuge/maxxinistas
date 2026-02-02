@@ -7,8 +7,9 @@ const scoreDisplay = document.getElementById('score');
 const levelDisplay = document.getElementById('level');
 const livesDisplay = document.getElementById('lives');
 const finalScoreDisplay = document.getElementById('finalScore');
-const suggestionsCollected = document.getElementById('suggestionsCollected');
-const bookBtn = document.getElementById('bookBtn');
+const finalLevelDisplay = document.getElementById('finalLevel');
+const nameEntrySection = document.getElementById('nameEntrySection');
+const leaderboardSection = document.getElementById('leaderboardSection');
 const gameArea = document.getElementById('gameArea');
 const instructionsScreen = document.getElementById('instructionsScreen');
 const gameContainer = document.getElementById('gameContainer');
@@ -27,13 +28,13 @@ let levelUpTimer = 0;
 
 // Level configuration: score threshold, spawn rate, item speed, bomb chance
 const levels = [
-    { score: 0,    spawnRate: 1800, itemSpeed: 2.0, badChance: 0.10 },
-    { score: 100,  spawnRate: 1600, itemSpeed: 2.3, badChance: 0.15 },
-    { score: 250,  spawnRate: 1400, itemSpeed: 2.6, badChance: 0.20 },
-    { score: 450,  spawnRate: 1200, itemSpeed: 3.0, badChance: 0.25 },
-    { score: 750,  spawnRate: 1000, itemSpeed: 3.4, badChance: 0.30 },
-    { score: 1150, spawnRate: 800,  itemSpeed: 3.8, badChance: 0.35 },
-    { score: 1650, spawnRate: 650,  itemSpeed: 4.2, badChance: 0.40 },
+    { score: 0,    spawnRate: 1800, itemSpeed: 2.0, badChance: 0.20 },
+    { score: 100,  spawnRate: 1600, itemSpeed: 2.3, badChance: 0.25 },
+    { score: 250,  spawnRate: 1400, itemSpeed: 2.6, badChance: 0.30 },
+    { score: 450,  spawnRate: 1200, itemSpeed: 3.0, badChance: 0.35 },
+    { score: 750,  spawnRate: 1000, itemSpeed: 3.4, badChance: 0.40 },
+    { score: 1150, spawnRate: 800,  itemSpeed: 3.8, badChance: 0.45 },
+    { score: 1650, spawnRate: 650,  itemSpeed: 4.2, badChance: 0.50 },
 ];
 
 function getLevelConfig() {
@@ -243,6 +244,7 @@ function beginGame() {
 }
 
 function restartGame() {
+    NameEntry.hide();
     score = 0;
     lives = 3;
     items = [];
@@ -262,19 +264,35 @@ function restartGame() {
 function endGame() {
     gameRunning = false;
     finalScoreDisplay.textContent = score;
+    finalLevelDisplay.textContent = currentLevel;
 
-    // Show collected suggestions
-    let html = '<p style="margin-bottom: 8px;">You collected:</p>';
-    const toShow = collectedSuggestions.slice(-8);
-    toShow.forEach(s => {
-        html += `<span>${s}</span>`;
-    });
-    if (collectedSuggestions.length === 0) {
-        html += '<span>Nothing!</span>';
-    }
-    suggestionsCollected.innerHTML = html;
+    // Clear previous state
+    nameEntrySection.innerHTML = '';
+    leaderboardSection.innerHTML = '';
 
     gameOverScreen.classList.remove('hidden');
+
+    // Fetch latest leaderboard and show name entry if qualified
+    Leaderboard.fetch().then(() => {
+        if (Leaderboard.qualifiesForLeaderboard(score)) {
+            NameEntry.show(nameEntrySection, (name) => {
+                NameEntry.hide();
+                nameEntrySection.innerHTML = '<p>Saving...</p>';
+                Leaderboard.submit(name, score, currentLevel).then(() => {
+                    nameEntrySection.innerHTML = '';
+                    Leaderboard.render(leaderboardSection, score);
+                }).catch(() => {
+                    nameEntrySection.innerHTML = '';
+                    Leaderboard.render(leaderboardSection);
+                });
+            });
+        } else {
+            Leaderboard.render(leaderboardSection);
+        }
+    }).catch(() => {
+        // Leaderboard unavailable, just show the game over screen
+        leaderboardSection.innerHTML = '<p>Leaderboard unavailable</p>';
+    });
 }
 
 function updateUI() {
