@@ -144,20 +144,7 @@ const goodSuggestions = [
 ];
 
 const badSuggestions = [
-    // Inappropriate suggestions audiences yell
-    { text: "Eggplant", emoji: "🍆", points: -1 },
-    { text: "Peach", emoji: "🍑", points: -1 },
-    { text: "Dildo", emoji: "🔧", points: -1 },
-    { text: "Balls", emoji: "🎾", points: -1 },
-    { text: "Proctologist", emoji: "🩺", points: -1 },
-    { text: "Gynecologist", emoji: "👩‍⚕️", points: -1 },
-    { text: "Orgy", emoji: "🛏️", points: -1 },
-    { text: "Fart", emoji: "💨", points: -1 },
-    // Weapons
-    { text: "Gun", emoji: "🔫", points: -1 },
-    { text: "Knife", emoji: "🔪", points: -1 },
     { text: "Bomb", emoji: "💣", points: -1 },
-    { text: "Axe", emoji: "🪓", points: -1 },
 ];
 
 // Input handling
@@ -491,7 +478,8 @@ function gameLoop(timestamp) {
             item.x > player.x &&
             item.x < player.x + player.width) {
 
-            createPoof(item.x, item.y, item.suggestion.text, item.suggestion.points === -1);
+            const poofText = item.suggestion.points === -1 ? "BOOM!" : item.suggestion.text;
+createPoof(item.x, item.y, poofText, item.suggestion.points === -1);
 
             if (item.suggestion.points === -1) {
                 lives--;
