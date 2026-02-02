@@ -5,7 +5,7 @@ const startScreen = document.getElementById('startScreen');
 const gameOverScreen = document.getElementById('gameOverScreen');
 const scoreDisplay = document.getElementById('score');
 const levelDisplay = document.getElementById('level');
-const livesDisplay = document.getElementById('lives');
+const staminaFill = document.getElementById('staminaFill');
 const finalScoreDisplay = document.getElementById('finalScore');
 const finalLevelDisplay = document.getElementById('finalLevel');
 const nameEntrySection = document.getElementById('nameEntrySection');
@@ -17,7 +17,7 @@ const gameContainer = document.getElementById('gameContainer');
 // Game state
 let gameRunning = false;
 let score = 0;
-let lives = 3;
+let stamina = 100;
 let items = [];
 let collectedSuggestions = [];
 let poofs = [];
@@ -213,7 +213,7 @@ function startGame() {
     // Remove splash mode for normal layout
     gameContainer.classList.remove('splash-mode');
 
-    // Show instructions screen
+    // Fade out and show instructions
     startScreen.classList.add('fade-out');
 
     setTimeout(() => {
@@ -225,7 +225,7 @@ function startGame() {
 
 function beginGame() {
     score = 0;
-    lives = 3;
+    stamina = 100;
     items = [];
     poofs = [];
     collectedSuggestions = [];
@@ -246,7 +246,7 @@ function beginGame() {
 function restartGame() {
     NameEntry.hide();
     score = 0;
-    lives = 3;
+    stamina = 100;
     items = [];
     poofs = [];
     collectedSuggestions = [];
@@ -298,7 +298,15 @@ function endGame() {
 function updateUI() {
     scoreDisplay.textContent = score;
     levelDisplay.textContent = currentLevel;
-    livesDisplay.textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+    staminaFill.style.width = stamina + '%';
+    // Change color based on stamina level
+    if (stamina > 50) {
+        staminaFill.style.background = '#4CAF50';
+    } else if (stamina > 25) {
+        staminaFill.style.background = '#FFD700';
+    } else {
+        staminaFill.style.background = '#CC0000';
+    }
 }
 
 function spawnItem() {
@@ -544,10 +552,10 @@ function gameLoop(timestamp) {
             item.x < player.x + player.width) {
 
             const poofText = item.suggestion.points === -1 ? "BOOM!" : item.suggestion.text;
-createPoof(item.x, item.y, poofText, item.suggestion.points === -1);
+            createPoof(item.x, item.y, poofText, item.suggestion.points === -1);
 
             if (item.suggestion.points === -1) {
-                lives--;
+                stamina -= 25; // Bomb = big stamina hit
                 ctx.fillStyle = 'rgba(255,0,0,0.4)';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             } else {
@@ -558,14 +566,24 @@ createPoof(item.x, item.y, poofText, item.suggestion.points === -1);
             items.splice(i, 1);
             updateUI();
 
-            if (lives <= 0) {
+            if (stamina <= 0) {
                 endGame();
                 return;
             }
             continue;
         }
 
+        // Missed item (fell off screen)
         if (item.y > canvas.height) {
+            if (item.suggestion.points !== -1) {
+                // Missed a good suggestion = small stamina drain
+                stamina -= 5;
+                updateUI();
+                if (stamina <= 0) {
+                    endGame();
+                    return;
+                }
+            }
             items.splice(i, 1);
             continue;
         }

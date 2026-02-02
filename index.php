@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Maxxinistas | Improv Comedy</title>
-    <link rel="stylesheet" href="css/styles.css?v=2">
+    <link rel="stylesheet" href="css/styles.css?v=5">
 </head>
 <body>
     <div class="persistent-contact">
@@ -49,26 +49,13 @@
             <p class="tagline-splash">We love a deal.</p>
             <p class="description">Portland's bargain-hunting improv troupe</p>
             <button class="pixel-btn play-btn" onclick="startGame()">▶ PLAY</button>
-            <p class="controls-hint">Catch suggestions, avoid hecklers!</p>
         </div>
 
         <!-- Instructions Screen -->
         <div class="instructions-screen hidden" id="instructionsScreen">
             <h2>HOW TO PLAY</h2>
-            <div class="instructions-content">
-                <p>Catch audience suggestions in your cart!</p>
-                <div class="instructions-items">
-                    <div class="instruction-row good">
-                        <span class="emoji-examples">🦷 🌙 🤖 🚀 👻 💩</span>
-                        <span>= Points!</span>
-                    </div>
-                    <div class="instruction-row bad">
-                        <span class="emoji-examples">💣</span>
-                        <span>= Lose a life!</span>
-                    </div>
-                </div>
-                <p class="controls-info">Use ← → arrow keys to move</p>
-            </div>
+            <p class="instructions-text">Catch suggestions, dodge bombs, don't let the scene die.</p>
+            <p class="controls-info">← → arrow keys to move</p>
             <button class="pixel-btn" onclick="beginGame()">START</button>
         </div>
 
@@ -82,7 +69,9 @@
             <div class="score-board">
                 <span>LEVEL: <span id="level">1</span></span>
                 <span>SCORE: <span id="score">0</span></span>
-                <span class="lives">LIVES: <span id="lives">❤️❤️❤️</span></span>
+                <span class="stamina-container">
+                    STAMINA: <div class="stamina-bar"><div class="stamina-fill" id="staminaFill"></div></div>
+                </span>
             </div>
 
             <div style="position: relative;">
@@ -114,8 +103,8 @@
         </div>
     </div>
 
-    <script src="js/leaderboard.js?v=2"></script>
-    <script src="js/game.js?v=2"></script>
-    <script src="js/booking.js?v=2"></script>
+    <script src="js/leaderboard.js?v=3"></script>
+    <script src="js/game.js?v=6"></script>
+    <script src="js/booking.js?v=3"></script>
 </body>
 </html>
