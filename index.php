@@ -63,11 +63,11 @@
                         <span>= Points!</span>
                     </div>
                     <div class="instruction-row bad">
-                        <span class="emoji-examples">🍆 🍑 🔫 🔪 💣 💨</span>
+                        <span class="emoji-examples">💣</span>
                         <span>= Lose a life!</span>
                     </div>
                 </div>
-                <p class="controls-info">Use ← → arrow keys or mouse to move</p>
+                <p class="controls-info">Use ← → arrow keys to move</p>
             </div>
             <button class="pixel-btn" onclick="beginGame()">START</button>
         </div>
@@ -80,6 +80,7 @@
             </div>
 
             <div class="score-board">
+                <span>LEVEL: <span id="level">1</span></span>
                 <span>SCORE: <span id="score">0</span></span>
                 <span class="lives">LIVES: <span id="lives">❤️❤️❤️</span></span>
             </div>
@@ -103,7 +104,7 @@
             </div>
 
             <div class="controls">
-                ← → Arrow keys or mouse to move
+                ← → Arrow keys to move
             </div>
 
             <div class="mobile-controls">

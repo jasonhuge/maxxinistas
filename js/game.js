@@ -4,6 +4,7 @@ const ctx = canvas.getContext('2d');
 const startScreen = document.getElementById('startScreen');
 const gameOverScreen = document.getElementById('gameOverScreen');
 const scoreDisplay = document.getElementById('score');
+const levelDisplay = document.getElementById('level');
 const livesDisplay = document.getElementById('lives');
 const finalScoreDisplay = document.getElementById('finalScore');
 const suggestionsCollected = document.getElementById('suggestionsCollected');
@@ -20,9 +21,39 @@ let items = [];
 let collectedSuggestions = [];
 let poofs = [];
 let lastSpawn = 0;
-let spawnRate = 1800;
-let difficulty = 1;
 let cartShake = 0;
+let currentLevel = 1;
+let levelUpTimer = 0;
+
+// Level configuration: score threshold, spawn rate, item speed, bomb chance
+const levels = [
+    { score: 0,    spawnRate: 1800, itemSpeed: 2.0, badChance: 0.10 },
+    { score: 100,  spawnRate: 1600, itemSpeed: 2.3, badChance: 0.15 },
+    { score: 250,  spawnRate: 1400, itemSpeed: 2.6, badChance: 0.20 },
+    { score: 450,  spawnRate: 1200, itemSpeed: 3.0, badChance: 0.25 },
+    { score: 750,  spawnRate: 1000, itemSpeed: 3.4, badChance: 0.30 },
+    { score: 1150, spawnRate: 800,  itemSpeed: 3.8, badChance: 0.35 },
+    { score: 1650, spawnRate: 650,  itemSpeed: 4.2, badChance: 0.40 },
+];
+
+function getLevelConfig() {
+    return levels[Math.min(currentLevel - 1, levels.length - 1)];
+}
+
+function checkLevelUp() {
+    // Find what level we should be at based on score
+    let newLevel = 1;
+    for (let i = 0; i < levels.length; i++) {
+        if (score >= levels[i].score) {
+            newLevel = i + 1;
+        }
+    }
+    // If we leveled up, trigger animation
+    if (newLevel > currentLevel) {
+        currentLevel = newLevel;
+        levelUpTimer = 120;
+    }
+}
 
 // Parallax clouds - larger 8-bit style
 const clouds = [
@@ -149,27 +180,22 @@ const badSuggestions = [
 
 // Input handling
 let keys = { left: false, right: false };
-let mouseX = null;
 
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') keys.left = true;
-    if (e.key === 'ArrowRight') keys.right = true;
+    if (e.key === 'ArrowLeft') {
+        keys.left = true;
+        if (gameRunning) e.preventDefault();
+    }
+    if (e.key === 'ArrowRight') {
+        keys.right = true;
+        if (gameRunning) e.preventDefault();
+    }
     if (e.key === ' ' && !gameRunning && !startScreen.classList.contains('hidden')) startGame();
 });
 
 document.addEventListener('keyup', (e) => {
     if (e.key === 'ArrowLeft') keys.left = false;
     if (e.key === 'ArrowRight') keys.right = false;
-});
-
-canvas.addEventListener('mousemove', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    mouseX = (e.clientX - rect.left) * scaleX;
-});
-
-canvas.addEventListener('mouseleave', () => {
-    mouseX = null;
 });
 
 // Mobile controls
@@ -202,8 +228,9 @@ function beginGame() {
     items = [];
     poofs = [];
     collectedSuggestions = [];
-    difficulty = 1;
-    spawnRate = 1800;
+    currentLevel = 1;
+    levelUpTimer = 0;
+    lastSpawn = 0;
     player.x = 250;
 
     // Hide instructions, show game
@@ -221,8 +248,9 @@ function restartGame() {
     items = [];
     poofs = [];
     collectedSuggestions = [];
-    difficulty = 1;
-    spawnRate = 1800;
+    currentLevel = 1;
+    levelUpTimer = 0;
+    lastSpawn = 0;
     player.x = 250;
 
     gameOverScreen.classList.add('hidden');
@@ -251,15 +279,15 @@ function endGame() {
 
 function updateUI() {
     scoreDisplay.textContent = score;
+    levelDisplay.textContent = currentLevel;
     livesDisplay.textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
 }
 
 function spawnItem() {
+    const config = getLevelConfig();
     let suggestion;
-    // Bad suggestion chance increases with difficulty (starts 15%, maxes at 40%)
-    const badChance = Math.min(0.15 + (difficulty - 1) * 0.05, 0.40);
 
-    if (Math.random() < badChance) {
+    if (Math.random() < config.badChance) {
         suggestion = badSuggestions[Math.floor(Math.random() * badSuggestions.length)];
     } else {
         suggestion = goodSuggestions[Math.floor(Math.random() * goodSuggestions.length)];
@@ -269,7 +297,7 @@ function spawnItem() {
         x: Math.random() * (canvas.width - 120) + 60,
         y: -40,
         suggestion: suggestion,
-        speed: 2 + difficulty * 0.6,
+        speed: config.itemSpeed,
         width: 0
     });
 }
@@ -387,6 +415,30 @@ function drawClouds() {
     }
 }
 
+function drawLevelUp() {
+    if (levelUpTimer <= 0) return;
+
+    levelUpTimer--;
+    const alpha = Math.min(1, levelUpTimer / 30);
+    const scale = 1 + (120 - levelUpTimer) * 0.005;
+    const isMaxLevel = currentLevel >= levels.length;
+    const text = isMaxLevel ? "CART BLANCHE!" : `LEVEL ${currentLevel}!`;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = `bold ${48 * scale}px Courier New`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 6;
+    ctx.strokeText(text, canvas.width / 2, canvas.height / 2 - 50);
+
+    ctx.fillStyle = isMaxLevel ? '#FF00FF' : '#FFD700';
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2 - 50);
+    ctx.restore();
+}
+
 function drawStage() {
     ctx.fillStyle = '#555555';
     ctx.fillRect(0, canvas.height - 60, canvas.width, 60);
@@ -453,19 +505,14 @@ function gameLoop(timestamp) {
     drawClouds();
     drawStage();
 
-    if (timestamp - lastSpawn > spawnRate) {
+    const config = getLevelConfig();
+    if (timestamp - lastSpawn > config.spawnRate) {
         spawnItem();
         lastSpawn = timestamp;
-        if (spawnRate > 500) spawnRate -= 25;
-        difficulty += 0.05;
     }
 
-    if (mouseX !== null) {
-        player.x += (mouseX - player.x - player.width/2) * 0.15;
-    } else {
-        if (keys.left) player.x -= player.speed;
-        if (keys.right) player.x += player.speed;
-    }
+    if (keys.left) player.x -= player.speed;
+    if (keys.right) player.x += player.speed;
 
     player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
@@ -488,6 +535,7 @@ createPoof(item.x, item.y, poofText, item.suggestion.points === -1);
             } else {
                 score += item.suggestion.points;
                 collectedSuggestions.push(item.suggestion.emoji);
+                checkLevelUp();
             }
             items.splice(i, 1);
             updateUI();
@@ -509,5 +557,6 @@ createPoof(item.x, item.y, poofText, item.suggestion.points === -1);
 
     drawCart(player.x, player.y);
     updateAndDrawPoofs();
+    drawLevelUp();
     requestAnimationFrame(gameLoop);
 }
