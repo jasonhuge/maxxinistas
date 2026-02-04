@@ -104,7 +104,7 @@
     </div>
 
     <script src="js/leaderboard.js?v=3"></script>
-    <script src="js/game.js?v=6"></script>
+    <script src="js/game.js?v=15"></script>
     <script src="js/booking.js?v=3"></script>
 </body>
 </html>

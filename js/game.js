@@ -21,6 +21,7 @@ let stamina = 100;
 let items = [];
 let collectedSuggestions = [];
 let poofs = [];
+let splats = [];
 let lastSpawn = 0;
 let cartShake = 0;
 let currentLevel = 1;
@@ -210,13 +211,12 @@ rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); keys.right = 
 
 // Game functions
 function startGame() {
-    // Remove splash mode for normal layout
-    gameContainer.classList.remove('splash-mode');
-
     // Fade out and show instructions
     startScreen.classList.add('fade-out');
 
     setTimeout(() => {
+        // Remove splash mode after fade completes
+        gameContainer.classList.remove('splash-mode');
         startScreen.classList.add('hidden');
         startScreen.classList.remove('fade-out');
         instructionsScreen.classList.remove('hidden');
@@ -228,6 +228,7 @@ function beginGame() {
     stamina = 100;
     items = [];
     poofs = [];
+    splats = [];
     collectedSuggestions = [];
     currentLevel = 1;
     levelUpTimer = 0;
@@ -249,6 +250,7 @@ function restartGame() {
     stamina = 100;
     items = [];
     poofs = [];
+    splats = [];
     collectedSuggestions = [];
     currentLevel = 1;
     levelUpTimer = 0;
@@ -319,11 +321,14 @@ function spawnItem() {
         suggestion = goodSuggestions[Math.floor(Math.random() * goodSuggestions.length)];
     }
 
+    // Add some random variation to speed (+/- 10%)
+    const speedVariation = config.itemSpeed * (0.9 + Math.random() * 0.2);
+
     items.push({
         x: Math.random() * (canvas.width - 120) + 60,
         y: -40,
         suggestion: suggestion,
-        speed: config.itemSpeed,
+        speed: speedVariation,
         width: 0
     });
 }
@@ -395,6 +400,43 @@ function updateAndDrawPoofs() {
         ctx.fillStyle = poof.isBad ? '#FF4444' : '#FFFFFF';
         ctx.fillText(poof.text, poof.x, poof.y);
 
+        ctx.restore();
+    }
+}
+
+function createSplat(x) {
+    // Create multiple particles bursting up from stage
+    for (let i = 0; i < 8; i++) {
+        splats.push({
+            x: x,
+            y: canvas.height - 65,
+            vx: (Math.random() - 0.5) * 6,
+            vy: -Math.random() * 8 - 2,
+            life: 1.0
+        });
+    }
+}
+
+function updateAndDrawSplats() {
+    for (let i = splats.length - 1; i >= 0; i--) {
+        const p = splats[i];
+
+        p.life -= 0.03;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.4; // gravity
+
+        if (p.life <= 0) {
+            splats.splice(i, 1);
+            continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = '#8B4513';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
     }
 }
@@ -573,17 +615,22 @@ function gameLoop(timestamp) {
             continue;
         }
 
-        // Missed item (fell off screen)
-        if (item.y > canvas.height) {
-            if (item.suggestion.points !== -1) {
-                // Missed a good suggestion = small stamina drain
-                stamina -= 5;
-                updateUI();
-                if (stamina <= 0) {
-                    endGame();
-                    return;
-                }
+        // Good suggestions hit the stage floor
+        if (item.suggestion.points !== -1 && item.y > canvas.height - 60) {
+            // Missed a good suggestion = small stamina drain + splat
+            createSplat(item.x);
+            stamina -= 5;
+            updateUI();
+            if (stamina <= 0) {
+                endGame();
+                return;
             }
+            items.splice(i, 1);
+            continue;
+        }
+
+        // Bombs fall off the screen
+        if (item.y > canvas.height) {
             items.splice(i, 1);
             continue;
         }
@@ -593,6 +640,7 @@ function gameLoop(timestamp) {
 
     drawCart(player.x, player.y);
     updateAndDrawPoofs();
+    updateAndDrawSplats();
     drawLevelUp();
     requestAnimationFrame(gameLoop);
 }
